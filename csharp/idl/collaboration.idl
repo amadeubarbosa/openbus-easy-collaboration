@@ -1,0 +1,313 @@
+/**
+ * \mainpage Documentação da IDL
+ */
+#ifndef __TECGRAF_OPENBUS_CORE_CREDENTIAL_IDL__
+#define __TECGRAF_OPENBUS_CORE_CREDENTIAL_IDL__
+
+#include "scs.idl"
+#include "core.idl"
+
+/**
+ * \brief Módulo dos sistemas e aplicações do Tecgraf.
+ */
+module tecgraf {
+
+/**
+ * \brief Módulo do middleware OpenBus.
+ */
+module openbus {
+
+/**
+ * \brief Módulo de definições de serviços do OpenBus.
+ */
+module services {
+
+/**
+ * \brief Módulo de definições do serviço de colaboração do OpenBus.
+ */
+module collaboration {
+
+/**
+ * \brief Módulo de versionamento do serviço de colaboração.
+ */
+module v1_0 {
+
+/** \brief Nome do serviço de colaboração. */
+const string CollaborationServiceName = "CollaborationService";
+/** \brief Nome da faceta de registro de colaboração. */
+const string CollaborationRegistryFacet = "CollaborationRegistry";
+/** \brief Nome da faceta de observação de colaboração. */
+const string CollaborationObserverFacet = "CollaborationObserver";
+/** \brief Nome da faceta de registro de sessão de colaboração. */
+const string SessionRegistryFacet = "SessionRegistry";
+
+/** \brief Identificador da inscrição de um observador de uma colaboração ou de um consumidor de eventos. */
+typedef long Cookie;
+/** \brief Identificador de um membro. */
+typedef string Identifier;
+
+/**
+ * \brief Indica que o nome de membro já esta em uso na sessão de colaboração.
+ */
+exception NameInUse { Identifier name; };
+
+/**
+ * \brief Indica que a entidade não possui uma sessão de colaboração registrada.
+ */
+exception SessionDoesNotExist { Identifier entity; };
+
+/**
+ * \brief Representa um observador de uma colaboração.
+ */
+interface CollaborationObserver {
+	/**
+	 * \brief Notifica que uma membro foi incluído na colaboração.
+	 *
+	 * \param name nome do membro incluído.
+	 * \param member o membro incluído.
+	 */
+	void memberAdded(in Identifier name, in ::scs::core::IComponent member)
+		raises (core::v2_0::services::ServiceFailure);
+	
+	/**
+	 * \brief Notifica que uma membro foi removido na colaboração.
+	 *
+	 * \param name nome do membro removido.
+	 */
+	void memberRemoved(in Identifier name)
+		raises (core::v2_0::services::ServiceFailure);
+	
+	/**
+	 * \brief Notifica que a colaboração foi finalizada.
+	 */
+	void destroyed()
+		raises (core::v2_0::services::ServiceFailure);	
+};
+
+/**
+ * \brief Representa um consumidor de eventos.
+ *
+ * Interface a ser implementada pelo consumidor interessado em participar de
+ * canal de eventos(EventChannel).
+ *
+ */
+interface EventConsumer {
+	/**
+	 * \brief Recebe um evento
+	 *
+	 * \param event o evento enviado.
+	 */
+	void push(in any event)
+		raises (core::v2_0::services::ServiceFailure);
+};
+
+/**
+ * \brief Representa um canal para a troca de eventos do tipo push.
+ */
+interface EventChannel {
+	/**
+	 * \brief Registra um consumidor para consumir eventos deste canal.
+	 *
+	 * \param consumer o consumidor de eventos.
+	 * \return identificador do registro do consumidor.
+	 */
+	Cookie subscribe(in EventConsumer consumer)
+		raises (core::v2_0::services::ServiceFailure);
+
+	/**
+	 * \brief Descadastra um consumidor de eventos deste canal.
+	 *
+	 * \param ck o identificador do registro do consumidor de eventos.
+	 * \return \c true, caso o descadastramento foi realizado com sucesso, ou 
+	 * \c false, caso contrário.
+	 */
+	boolean unsubscribe(in Cookie ck)
+		raises (core::v2_0::services::ServiceFailure);
+
+	/**
+	 * \brief Publica um evento no canal.
+   *
+	 * Todos os consumidores do canal serão notificados através da execução 
+   * das suas respectivas implementações de EventConsumer::push(in any event).
+   * Sendo o parâmetro event o evento publicado no canal.
+   *
+	 * \param event o evento.
+	 */
+	void push(in any event)
+		raises (core::v2_0::services::ServiceFailure);
+};
+
+/** \brief Representa um membro de uma sessão de colaboração */
+struct CollaborationMember {
+	/** \brief Identificador do membro. */
+	Identifier name;
+	/** \brief Componente do membro */
+	::scs::core::IComponent member;
+};
+
+/** \brief Sequência de membros. */
+typedef sequence<CollaborationMember> CollaborationMemberSeq;
+
+/**
+ * \brief Representa uma sessão de colaboração.
+ */
+interface CollaborationSession {	
+	/** \brief Canal de eventos associado à sessão de colaboração. */
+	readonly attribute EventChannel channel;
+	
+	/**
+	 * \brief Registra um membro à sessão de colaboração
+	 *
+	 * \param name nome do membro.
+	 * \param member o membro.
+	 *
+	 * \exception NameInUse Já existe um membro com o mesmo nome.
+	 */
+	void addMember(in Identifier name, in ::scs::core::IComponent member)
+		raises (NameInUse, core::v2_0::services::ServiceFailure);
+	
+	/**
+	 * \brief Descadastra um membro da sessão de colaboração
+	 *
+	 * \param name nome do membro.
+	 * \return \c true, caso o descadastramento foi realizado com sucesso, ou 
+	 * \c false, caso contrário.
+	 */
+	boolean removeMember(in Identifier name)
+		raises (core::v2_0::services::ServiceFailure);
+	
+	/**
+	 * \brief Recupera o componente de um membro da colaboração, ou nulo caso não 
+	 * exista um membro com o nome especificado.
+	 *
+	 * \param name nome do membro.
+	 * \return o componente do membro.
+	 */
+	::scs::core::IComponent getMember(in Identifier name)
+		raises (core::v2_0::services::ServiceFailure);
+	
+	/**
+	 * \brief Recupera a lista dos membros cadastrados na sessão de colaboração.
+	 *
+	 * \return A lista com os membros cadastrados.
+	 */
+	CollaborationMemberSeq getMembers() 
+		raises (core::v2_0::services::ServiceFailure);
+	
+	/**
+	 * \brief Termina a sessão de colaboração.
+	 */
+	void destroy()
+		raises (core::v2_0::services::ServiceFailure);
+	
+	/**
+	 * \brief Cadastra um observador para essa colaboração.
+	 *
+	 * \param observer o observador a ser cadastrado.
+	 * \return um identificador do cadastro do observador.
+	 */
+	Cookie subscribeObserver(in CollaborationObserver observer)
+		raises (core::v2_0::services::ServiceFailure);
+	
+	/**
+	 * \brief Descadastra o observador da colaboração
+	 *
+	 * \param ck identificador do cadastro do observador.
+	 *
+	 * \return \c true, caso o descadastramento foi realizado com sucesso, ou 
+	 * \c false, caso contrário.
+	 */
+	boolean unsubscribeObserver(in Cookie ck)
+		raises (core::v2_0::services::ServiceFailure);	
+};
+
+/**
+ * \brief Interface para criação de sessões de colaboração.
+ */
+interface CollaborationRegistry {
+	/**
+	 * \brief Cria uma sessão de colaboração.
+	 *
+   * A sessão deve ser destruída através do método destroy() e é persistida 
+   * enquanto existir ao menos um membro, observador ou consumidor, ou, se o 
+   * criador da sessão  ainda existir.
+   *
+   * A sessão deve ser compartilhada através do compartilhamento da sua 
+   * referência CORBA, que é o retorno do método createCollaborationSession.
+   * O compartilhamento da sessão é uma responsabilidade do usuário.
+   *
+	 * \return a sessão criada.
+	 */
+	CollaborationSession createCollaborationSession()
+		raises (core::v2_0::services::ServiceFailure);
+};
+
+/**
+ * \brief Interface para registro e busca de sessões de colaboração.
+ */
+interface SessionRegistry {
+
+	/**
+	 * \brief Registra uma sessão de colaboração.
+	 *
+	 * A sessão passada como argumento é registrada tendo como dono a
+	 * entidade que realiza esta chamada. 
+	 *
+	 * \param session sessão a ser registrada.
+	 */
+	void registerSession(in CollaborationSession session)
+		raises (core::v2_0::services::ServiceFailure);
+
+	/**
+	 * \brief Recupera uma sessão de colaboração.
+	 *
+	 * A sessão a ser recuperada deve ter sido registrada pela mesma
+	 * entidade que realiza esta chamada. Caso não exista uma sessão para
+	 * essa entidade, é lançada uma exceção.
+	 *
+	 * \exception SessionDoesNotExist Não existe uma sessão registrada por essa entidade.
+	 */
+	CollaborationSession getSession()
+		raises (core::v2_0::services::ServiceFailure, SessionDoesNotExist);
+
+	/**
+	 * \brief Busca e recupera uma sessão de colaboração.
+	 *
+	 * A sessão a ser recuperada deve ter sido registrada pela entidade
+	 * passada como referência. Caso não exista uma sessão para essa
+	 * entidade, é lançada uma exceção.
+	 *
+	 * \param entity entidade vinculada à sessão procurada.
+	 *
+	 * \exception SessionDoesNotExist Não existe uma sessão registrada por essa entidade.
+	 */
+	CollaborationSession findSession(in string entity)
+		raises (core::v2_0::services::ServiceFailure, SessionDoesNotExist);
+
+	/**
+	 * \brief Remove uma sessão de colaboração.
+	 *
+	 * A sessão a ser removida deve ter sido registrada pela entidade
+	 * passada como referência. Caso não exista uma sessão para essa
+	 * entidade, é lançada uma exceção.
+	 *
+	 * \param entity entidade vinculada à sessão procurada.
+	 *
+	 * \exception SessionDoesNotExist Não existe uma sessão registrada por essa entidade.
+	 */
+	void removeSession(in string entity)
+		raises (core::v2_0::services::ServiceFailure, SessionDoesNotExist);
+		
+};
+
+}; // version
+
+}; // collaboration
+
+}; // services
+
+}; // openbus
+
+}; // tecgraf
+
+#endif
