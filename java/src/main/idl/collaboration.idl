@@ -284,19 +284,6 @@ interface SessionRegistry {
 	CollaborationSession findSession(in string entity)
 		raises (core::v2_0::services::ServiceFailure, SessionDoesNotExist);
 
-	/**
-	 * \brief Remove uma sessão de colaboração.
-	 *
-	 * A sessão a ser removida deve ter sido registrada pela entidade
-	 * passada como referência. Caso não exista uma sessão para essa
-	 * entidade, é lançada uma exceção.
-	 *
-	 * \param entity entidade vinculada à sessão procurada.
-	 *
-	 * \exception SessionDoesNotExist Não existe uma sessão registrada por essa entidade.
-	 */
-	void removeSession(in string entity)
-		raises (core::v2_0::services::ServiceFailure, SessionDoesNotExist);
 		
 };
 

@@ -15,7 +15,7 @@ import tecgraf.openbus.services.collaboration.v1_0.CollaborationSession;
  * @author Tecgraf/PUC-Rio
  *
  */
-public interface EasyCollabing {
+public interface IEasyCollaboration {
 
   /**
    * Inicia uma sessão de colaboração.
@@ -38,13 +38,21 @@ public interface EasyCollabing {
   public abstract void exitCollaboration() throws ServiceFailure;
 
   /**
-   * Compartilha um array de bytes no canal de eventos.
+   * Compartilha um datakey no canal de eventos.
    * 
-   * @param key array de bytes
+   * @param key datakey
    * @throws ServiceFailure
    */
   public abstract void shareDataKey(byte[] key) throws ServiceFailure;
 
+  /**
+   * Compartilha uma lista de datakeys no canal de eventos.
+   * 
+   * @param key datakey
+   * @throws ServiceFailure
+   */
+  public abstract void shareDataKeys(List<byte[]> keys) throws ServiceFailure;
+  
   /**
    * Compartilha um objeto qualquer no canal de eventos.
    * 
@@ -54,17 +62,17 @@ public interface EasyCollabing {
   public abstract void shareAny(Any any) throws ServiceFailure;
 
   /**
-   * Consome os arrays de bytes no canal de eventos.
+   * Consome os datakeys no canal de eventos.
    * 
    * @return lista de array de bytes
    */
-  public abstract List<byte[]> consumeDataKey();
+  public abstract List<byte[]> consumeDataKeys();
 
   /**
    * Consome os objetos no canal de eventos.
    * 
    * @return lista de objetos
    */
-  public abstract List<Any> consumeAny();
+  public abstract List<Any> consumeAnys();
 
 }
