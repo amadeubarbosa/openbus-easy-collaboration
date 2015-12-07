@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import org.omg.CORBA.Any;
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.OctetSeqHelper;
+import org.omg.CORBA.ORBPackage.InvalidName;
 import org.omg.PortableServer.POA;
 import org.omg.PortableServer.POAHelper;
 
@@ -29,7 +30,7 @@ import tecgraf.openbus.services.collaboration.v1_0.SessionDoesNotExist;
 import tecgraf.openbus.services.collaboration.v1_0.SessionRegistry;
 import tecgraf.openbus.services.collaboration.v1_0.SessionRegistryHelper;
 
-public class EasyCollaboration implements EasyCollabing {
+public class EasyCollaboration implements IEasyCollaboration {
 
   private OpenBusContext context;
   private SessionRegistry sessions;
@@ -88,11 +89,7 @@ public class EasyCollaboration implements EasyCollabing {
     }
     catch (tecgraf.openbus.core.v2_0.services.ServiceFailure ex) {
       throw new ServiceFailure(ex.getMessage());
-    }
-    catch (Throwable t) {
-      logger.severe("Unknown error: " + t.getMessage());
-      t.printStackTrace();
-    }  
+    } 
     return theSession;
 
   }
@@ -111,6 +108,7 @@ public class EasyCollaboration implements EasyCollabing {
       throw new ServiceFailure(e.getMessage());
     }
     finally {
+      
       subsId = 0;
       obsId = 0;
       theSession = null;
@@ -175,6 +173,23 @@ public class EasyCollaboration implements EasyCollabing {
    * {@inheritDoc}
    */
   @Override
+  public void shareDataKeys(List<byte[]> keys) throws ServiceFailure {
+    try {
+      for(byte[] key: keys) {
+        Any any = context.orb().create_any();
+        OctetSeqHelper.insert(any, key);
+        theSession.channel().push(any);
+      }
+    }
+    catch (tecgraf.openbus.core.v2_0.services.ServiceFailure e) {
+      throw new ServiceFailure(e.getMessage());
+    }
+  }
+  
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void shareAny(Any any) throws ServiceFailure {
     try {
       theSession.channel().push(any);
@@ -188,7 +203,7 @@ public class EasyCollaboration implements EasyCollabing {
    * {@inheritDoc}
    */
   @Override
-  public List<byte[]> consumeDataKey() {
+  public List<byte[]> consumeDataKeys() {
     synchronized (servant.keys) {
       LinkedList<byte[]> list = new LinkedList<byte[]>(servant.keys);
       servant.keys.clear();
@@ -200,7 +215,7 @@ public class EasyCollaboration implements EasyCollabing {
    * {@inheritDoc}
    */
   @Override
-  public List<Any> consumeAny() {
+  public List<Any> consumeAnys() {
     synchronized (servant.anys) {
       LinkedList<Any> list = new LinkedList<Any>(servant.anys);
       servant.anys.clear();

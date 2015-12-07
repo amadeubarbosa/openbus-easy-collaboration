@@ -14,7 +14,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 
-import lib.EasyCollabing;
+import lib.IEasyCollaboration;
 import lib.EasyCollaboration;
 import lib.LibUtils.ORBRunThread;
 import lib.LibUtils.ShutdownThread;
@@ -29,7 +29,7 @@ public class Sender extends JFrame implements ActionListener {
 
   private static Connection conn;
   private static OpenBusContext context;
-  private static EasyCollabing easy;
+  private static IEasyCollaboration easy;
   private final GridBagConstraints constraints;
   public final Border border = BorderFactory.createLoweredBevelBorder();
   protected final JTextField keyText;
@@ -147,6 +147,8 @@ public class Sender extends JFrame implements ActionListener {
     Configs configs = Configs.readConfigsFile();
     String entity = configs.user;
     byte[] password = configs.password;
+    String host = configs.bushost;
+    int port = configs.busport;
 //    Utils.setLibLogLevel(Level.FINE);
 
     ORB orb = ORBInitializer.initORB(args);
@@ -155,7 +157,7 @@ public class Sender extends JFrame implements ActionListener {
     Runtime.getRuntime().addShutdownHook(shutdown);
 
     context = (OpenBusContext) orb.resolve_initial_references("OpenBusContext");
-    conn = context.createConnection("localhost", 2089);
+    conn = context.createConnection(host, port);
     context.setDefaultConnection(conn);
     conn.loginByPassword(entity, password);
     shutdown.addConnetion(conn);
