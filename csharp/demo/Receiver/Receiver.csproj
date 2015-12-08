@@ -39,22 +39,22 @@
       <HintPath>..\..\lib\BouncyCastle.Crypto.dll</HintPath>
     </Reference>
     <Reference Include="IIOPChannel">
-      <HintPath>..\lib\IIOPChannel.dll</HintPath>
+      <HintPath>..\..\lib\IIOPChannel.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus">
-      <HintPath>..\lib\OpenBus.dll</HintPath>
+      <HintPath>..\..\lib\OpenBus.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Collaboration.Idl">
-      <HintPath>..\lib\OpenBus.Collaboration.Idl.dll</HintPath>
+      <HintPath>..\..\lib\OpenBus.Collaboration.Idl.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Idl">
-      <HintPath>..\lib\OpenBus.Idl.dll</HintPath>
+      <HintPath>..\..\lib\OpenBus.Idl.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Legacy.Idl">
       <HintPath>..\..\lib\OpenBus.Legacy.Idl.dll</HintPath>
     </Reference>
     <Reference Include="Scs.Core">
-      <HintPath>..\lib\Scs.Core.dll</HintPath>
+      <HintPath>..\..\lib\Scs.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
