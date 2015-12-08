@@ -1,34 +1,21 @@
 package lib;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.logging.Logger;
-
 import org.omg.CORBA.Any;
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.OctetSeqHelper;
-import org.omg.CORBA.ORBPackage.InvalidName;
 import org.omg.PortableServer.POA;
 import org.omg.PortableServer.POAHelper;
-
 import scs.core.IComponent;
 import tecgraf.openbus.OpenBusContext;
 import tecgraf.openbus.core.v2_0.services.ServiceFailure;
 import tecgraf.openbus.core.v2_0.services.offer_registry.ServiceOfferDesc;
 import tecgraf.openbus.core.v2_0.services.offer_registry.ServiceProperty;
-import tecgraf.openbus.services.collaboration.v1_0.CollaborationObserver;
-import tecgraf.openbus.services.collaboration.v1_0.CollaborationObserverHelper;
-import tecgraf.openbus.services.collaboration.v1_0.CollaborationObserverPOA;
-import tecgraf.openbus.services.collaboration.v1_0.CollaborationRegistry;
-import tecgraf.openbus.services.collaboration.v1_0.CollaborationRegistryHelper;
-import tecgraf.openbus.services.collaboration.v1_0.CollaborationSession;
-import tecgraf.openbus.services.collaboration.v1_0.EventConsumer;
-import tecgraf.openbus.services.collaboration.v1_0.EventConsumerHelper;
-import tecgraf.openbus.services.collaboration.v1_0.EventConsumerPOA;
-import tecgraf.openbus.services.collaboration.v1_0.SessionDoesNotExist;
-import tecgraf.openbus.services.collaboration.v1_0.SessionRegistry;
-import tecgraf.openbus.services.collaboration.v1_0.SessionRegistryHelper;
+import tecgraf.openbus.services.collaboration.v1_0.*;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Logger;
 
 public class EasyCollaboration implements IEasyCollaboration {
 
@@ -293,7 +280,7 @@ public class EasyCollaboration implements IEasyCollaboration {
     public void push(Any event)
       throws tecgraf.openbus.core.v2_0.services.ServiceFailure {
       logger.info("Received event");
-      if (event.type().equal(OctetSeqHelper.type())) {
+      if (event.type().equivalent(OctetSeqHelper.type())) {
         keys.add(OctetSeqHelper.extract(event));
       }
       else {

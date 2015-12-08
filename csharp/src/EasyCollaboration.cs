@@ -40,10 +40,11 @@ namespace tecgraf.openbus.easycollab{
       SessionRegistry sreg = GetSessions();
       try{
         _theSession = sreg.getSession();
-        Logger.Info("Session retrieved: " + _theSession);
+        Logger.Info("Session retrieved: " + OrbServices.GetSingleton().object_to_string(_theSession));
       }
-      catch (SessionDoesNotExist e){
-        Logger.Warn("Session not found for entity " + e.entity);
+      catch (TargetInvocationException e){
+        if (e.InnerException is SessionDoesNotExist)
+          Logger.Warn("Session not found for entity " + (e.InnerException as SessionDoesNotExist).entity);
       }
       catch (Exception e){
         Logger.Error("Error trying to obtain session: " + e);
@@ -53,55 +54,27 @@ namespace tecgraf.openbus.easycollab{
         try{
           CollaborationRegistry collab = GetCollabs();
           _theSession = collab.createCollaborationSession();
-        }
-        catch (Exception e){
-          Logger.Error("Error creating session: " + e);
-          throw;
-        }
-        try{
           sreg.registerSession(_theSession);
         }
         catch (Exception e) {
-          Logger.Error("Error registering created session (it will be removed): " + e);
-          throw;
-        }
-        finally{
-          try{
+          Logger.Error("Error creating the session (it will be destroyed): " + e);
+          if (_theSession != null) 
             _theSession.destroy();
-            Logger.Warn("Created session destroyed because it wasn't registered.");
-          }
-          catch (Exception e){
-            Logger.Error("Error destroying created session, contact the administrator to destroy it: " + e);
-            throw;
-          }
+          throw;
         }
       }
       try{
         _obsId = _theSession.subscribeObserver(BuildObserver());
         Logger.Info("Observer subscribed");
-      }
-      catch (Exception e) {
-        Logger.Error("Error subscribing observer: " + e);
-        throw;
-      }
-      try {
         _consumer = BuildConsumer();
         _subsId = _theSession.channel.subscribe(_consumer);
         Logger.Info("Consumer registered");
       }
       catch (Exception e) {
+        if (_obsId != 0) 
+          _theSession.unsubscribeObserver(_obsId);
         Logger.Error("Error subscribing to the channel (the session observer will be removed): " + e);
         throw;
-      }
-      finally{
-        try{
-          _theSession.unsubscribeObserver(_obsId);
-          Logger.Warn("Observer unsubscribed because it wasn't possible to subscribe to the channel.");
-        }
-        catch (Exception e){
-          Logger.Error("Error unsubscribing observer and the subscription to the channel was not made. You should leave and rejoin this session or create a new one: " + e);
-          throw;
-        }
       }
       return _theSession;
     }
@@ -130,11 +103,13 @@ namespace tecgraf.openbus.easycollab{
 
     public void ShareDataKeys(List<byte[]> keys){
       foreach (byte[] key in keys){
-        Share(key);
+        omg.org.CORBA.TypeCode byteTC = OrbServices.GetSingleton().create_octet_tc();
+        omg.org.CORBA.TypeCode sequenceTC = OrbServices.GetSingleton().create_sequence_tc(0, byteTC);
+        Share(new Any(key, sequenceTC));
       }
     }
 
-    public void Share(object any){
+    public void Share(Any any){
       try {
         _theSession.channel.push(any);
       }
@@ -152,7 +127,7 @@ namespace tecgraf.openbus.easycollab{
       }
     }
 
-    public List<object> ConsumeAny(){
+    public List<object> ConsumeAnys(){
       lock (_servant.Anys) {
         List<object> list = new List<object>(_servant.Anys);
         _servant.Anys.Clear();

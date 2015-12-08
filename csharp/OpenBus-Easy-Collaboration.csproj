@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -42,8 +42,8 @@
     <Reference Include="OpenBus">
       <HintPath>lib\OpenBus.dll</HintPath>
     </Reference>
-    <Reference Include="OpenBus.Easy.Collaboration.Idl">
-      <HintPath>lib\OpenBus.Easy.Collaboration.Idl.dll</HintPath>
+    <Reference Include="OpenBus.Collaboration.Idl">
+      <HintPath>lib\OpenBus.Collaboration.Idl.dll</HintPath>
     </Reference>
     <Reference Include="OpenBus.Idl">
       <HintPath>lib\OpenBus.Idl.dll</HintPath>
@@ -62,7 +62,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>$(SolutionDir)\lib\IDLToCLSCompiler.exe -asmVersion 2.1.0 -o $(SolutionDir)\lib -r $(SolutionDir)\lib\Scs.Core.dll -r $(SolutionDir)\lib\OpenBus.Idl.dll OpenBus.EasyCollaboration.Idl $(SolutionDir)idl\collaboration.idl</PreBuildEvent>
+    <PreBuildEvent>$(SolutionDir)\lib\IDLToCLSCompiler.exe -asmVersion 1.1.0 -o $(SolutionDir)\lib -r $(SolutionDir)\lib\Scs.Core.dll -r $(SolutionDir)\lib\OpenBus.Idl.dll OpenBus.Collaboration.Idl $(SolutionDir)idl\collaboration.idl</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

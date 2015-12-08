@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.services.collaboration.v1_0;
+using omg.org.CORBA;
 
 namespace tecgraf.openbus.easycollab{
   /// <summary>
@@ -39,9 +40,9 @@ namespace tecgraf.openbus.easycollab{
     /// <summary>
     /// Compartilha um objeto qualquer no canal de eventos, que pode ser um datakey.
     /// </summary>
-    /// <param name="any">Objeto a ser compartilhado.</param>
+    /// <param name="any">Um objeto a ser compartilhado.</param>
     /// <exception cref="ServiceFailure">Pode ser lançada pelo Serviço de Colaboração, indicando uma falha ao compartilhar um objeto.</exception>
-    void Share(object any);
+    void Share(Any any);
 
     /// <summary>
     /// Consome os datakeys no canal de eventos.
@@ -51,10 +52,10 @@ namespace tecgraf.openbus.easycollab{
     List<byte[]> ConsumeDataKeys();
 
     /// <summary>
-    /// Consome objetos do canal de eventos.
+    /// Consome objetos do tipo Any do canal de eventos.
     /// </summary>
-    /// <returns>Lista de objetos.</returns>
+    /// <returns>Lista de Any.</returns>
     /// <exception cref="ServiceFailure">Pode ser lançada pelo Serviço de Colaboração, indicando uma falha ao fornecer objetos.</exception>
-    List<object> ConsumeAny();
+    List<object> ConsumeAnys();
   }
 }
