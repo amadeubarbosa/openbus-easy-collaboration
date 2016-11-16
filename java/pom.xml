@@ -32,9 +32,9 @@
   </distributionManagement>
 
   <scm>
-    <connection>scm:git:http://git.tecgraf.puc-rio.br/openbus/openbus-easy-collaboration.git</connection>
-    <developerConnection>scm:git:http://git.tecgraf.puc-rio.br/openbus/openbus-easy-collaboration.git</developerConnection>
-    <url>scm:git:http://git.tecgraf.puc-rio.br/openbus/openbus-easy-collaboration</url>
+    <connection>scm:git:https://git.tecgraf.puc-rio.br/openbus/openbus-easy-collaboration.git</connection>
+    <developerConnection>scm:git:https://git.tecgraf.puc-rio.br/openbus/openbus-easy-collaboration.git</developerConnection>
+    <url>https://git.tecgraf.puc-rio.br/openbus/openbus-easy-collaboration</url>
   </scm>
 
   <build>
