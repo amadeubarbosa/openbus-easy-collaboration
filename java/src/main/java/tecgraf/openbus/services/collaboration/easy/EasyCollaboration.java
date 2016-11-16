@@ -1,4 +1,4 @@
-package lib;
+package tecgraf.openbus.services.collaboration.easy;
 
 import org.omg.CORBA.Any;
 import org.omg.CORBA.ORB;
@@ -217,7 +217,7 @@ public class EasyCollaboration implements IEasyCollaboration {
         new ServiceProperty("openbus.component.interface",
           SessionRegistryHelper.id());
       List<ServiceOfferDesc> services =
-        LibUtils.findOffer(context.getOfferRegistry(), serviceProperties, 1,
+        Utils.findOffer(context.getOfferRegistry(), serviceProperties, 1,
           10, 1);
 
       for (ServiceOfferDesc offerDesc : services) {
@@ -242,7 +242,7 @@ public class EasyCollaboration implements IEasyCollaboration {
         new ServiceProperty("openbus.component.interface",
           CollaborationRegistryHelper.id());
       List<ServiceOfferDesc> services =
-        LibUtils.findOffer(context.getOfferRegistry(), serviceProperties, 1,
+        Utils.findOffer(context.getOfferRegistry(), serviceProperties, 1,
           10, 1);
 
       for (ServiceOfferDesc offerDesc : services) {

@@ -1,4 +1,4 @@
-package lib;
+package tecgraf.openbus.services.collaboration.easy;
 
 import java.util.List;
 
@@ -48,15 +48,17 @@ public interface IEasyCollaboration {
   /**
    * Compartilha uma lista de datakeys no canal de eventos.
    * 
-   * @param key datakey
+   * @param keys lista de datakeys
    * @throws ServiceFailure
    */
   public abstract void shareDataKeys(List<byte[]> keys) throws ServiceFailure;
   
   /**
-   * Compartilha um objeto qualquer no canal de eventos.
+   * Compartilha um objeto, desde que encapsulado com o tipo variável {@link Any} de CORBA, no canal de eventos.
+   * Para encapsular o objeto em um {@link Any} é preciso que o tipo esteja declarado em IDL e que se use os métodos
+   * <code>insert</code> da respectiva classe com sufixo <code>Helper</code> para inserir o objeto em um {@link Any}.
    * 
-   * @param any objeto
+   * @param any instância do {@link Any}
    * @throws ServiceFailure
    */
   public abstract void shareAny(Any any) throws ServiceFailure;
@@ -69,9 +71,11 @@ public interface IEasyCollaboration {
   public abstract List<byte[]> consumeDataKeys();
 
   /**
-   * Consome os objetos no canal de eventos.
+   * Consome os objetos, encapsulados com o tipo variável {@link Any} de CORBA, do canal de eventos.
+   * Para obter o objeto a partir de um {@link Any} é preciso que seu tipo esteja declarado em IDL e que se use os
+   * métodos <code>extract</code> da respectiva classe com sufixo <code>Helper</code> para extraí-lo de um {@link Any}.
    * 
-   * @return lista de objetos
+   * @return lista de instâncias de {@link Any}
    */
   public abstract List<Any> consumeAnys();
 

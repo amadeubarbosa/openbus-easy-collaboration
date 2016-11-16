@@ -38,7 +38,7 @@ namespace tecgraf.openbus.easycollab{
     void ShareDataKeys(List<byte[]> keys);
 
     /// <summary>
-    /// Compartilha um objeto qualquer no canal de eventos, que pode ser um datakey.
+    /// Compartilha um objeto, desde que encapsulado com o tipo variável Any de CORBA, no canal de eventos.
     /// </summary>
     /// <param name="any">Um objeto a ser compartilhado.</param>
     /// <exception cref="ServiceFailure">Pode ser lançada pelo Serviço de Colaboração, indicando uma falha ao compartilhar um objeto.</exception>
@@ -52,7 +52,7 @@ namespace tecgraf.openbus.easycollab{
     List<byte[]> ConsumeDataKeys();
 
     /// <summary>
-    /// Consome objetos do tipo Any do canal de eventos.
+    /// Consome objetos, encapsulados com o tipo variável Any de CORBA, do canal de eventos.
     /// </summary>
     /// <returns>Lista de Any.</returns>
     /// <exception cref="ServiceFailure">Pode ser lançada pelo Serviço de Colaboração, indicando uma falha ao fornecer objetos.</exception>

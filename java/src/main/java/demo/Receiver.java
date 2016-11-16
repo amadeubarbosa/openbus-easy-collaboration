@@ -17,10 +17,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 
-import lib.IEasyCollaboration;
-import lib.EasyCollaboration;
-import lib.LibUtils.ORBRunThread;
-import lib.LibUtils.ShutdownThread;
+import tecgraf.openbus.services.collaboration.easy.IEasyCollaboration;
+import tecgraf.openbus.services.collaboration.easy.EasyCollaboration;
+import demo.Utils.ORBRunThread;
+import demo.Utils.ShutdownThread;
 
 import org.omg.CORBA.ORB;
 
@@ -173,7 +173,7 @@ public class Receiver extends JFrame implements ActionListener {
     conn = context.createConnection(host, port);
     context.setDefaultConnection(conn);
     conn.loginByPassword(entity, password);
-    shutdown.addConnetion(conn);
+    shutdown.addConnection(conn);
     easy = new EasyCollaboration(context);
 
     SwingUtilities.invokeLater(new Runnable() {

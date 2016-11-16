@@ -46,7 +46,7 @@ public class Configs {
   public String sharedauth;
   /** Nivel de log do teste */
   public Level testlog;
-  /** Nível de log da lib */
+  /** Nível de log da tecgraf.openbus.services.collaboration.easy */
   public Level log;
   /** Propriedades do ORB */
   public String orbprops;
@@ -97,7 +97,7 @@ public class Configs {
 
   /**
    * Recupera o arquivo de configurações através da variável de ambiente
-   * OPENBUS_TESTCFG, ou do arquivo padrão "/test.properties"
+   * OPENBUS_TESTCFG, ou do arquivo padrão "/demo.properties"
    * 
    * @return as configurações
    * @throws IOException
@@ -105,7 +105,7 @@ public class Configs {
   public static Configs readConfigsFile() throws IOException {
     String path = System.getenv("OPENBUS_TESTCFG");
     if (path == null) {
-      path = "/test.properties";
+      path = "/demo.properties";
     }
     return new Configs(Utils.readPropertyFile(path));
   }
