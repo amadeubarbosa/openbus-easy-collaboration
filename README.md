@@ -16,7 +16,7 @@
 ## Lib CSharp
 
 * cd csharp
-* open the solution in Visual Studio 2010 (or above): OpenBus-Easy-Collaboration.sln
+* open the solution in Visual Studio 2010 (or above): OpenBus.Easy.Collaboration.sln
 * edit demo\Sender\bin\Debug\Sender.exe.config demo\Receiver\bin\Debug\Receiver.exe.config
 * execute the sender: demo\Sender\Bin\Debug\Sender.exe
 * execute the receiver: demo\Receiver\Bin\Debug\Receiver.exe
