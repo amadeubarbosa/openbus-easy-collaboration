@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
-using tecgraf.openbus.easycollab;
-using tecgraf.openbus;
 using Sender.Properties;
-using System.Configuration;
+using tecgraf.openbus;
+using tecgraf.openbus.services.collaboration.easy;
 
 namespace Sender
 {

@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using tecgraf.openbus;
 using Receiver.Properties;
-using tecgraf.openbus.easycollab;
+using tecgraf.openbus;
+using tecgraf.openbus.services.collaboration.easy;
 
 namespace Receiver
 {

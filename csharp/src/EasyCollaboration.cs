@@ -12,7 +12,7 @@ using IComponent = scs.core.IComponent;
 //TODO: Essa classe precisa ser totalmente revista em termos de robustez. As chamadas remotas precisam ser avaliadas sobre suas exceções e tratamentos (ex: se várias chamadas sao feitas, como o usuario sabe ate que ponto foi feito?).
 //TODO: pensar em oferecer thread safety (atualmente está parcial...)
 
-namespace tecgraf.openbus.easycollab{
+namespace tecgraf.openbus.services.collaboration.easy{
   public class EasyCollaboration : IEasyCollaboration{
     #region Fields
 
@@ -270,6 +270,13 @@ namespace tecgraf.openbus.easycollab{
         Anys.Add(e);
       }
     }
+
+    public override object InitializeLifetimeService()
+    {
+      // Evita a desativação automática pela política de 
+      // ciclo de vida do MarshalByRefObject
+      return null;
+    }
   }
   
   /**
@@ -297,6 +304,13 @@ namespace tecgraf.openbus.easycollab{
 
     public void destroyed() {
       Logger.Info("Session destroyed");
+    }
+
+    public override object InitializeLifetimeService()
+    {
+      // Evita a desativação automática pela política de 
+      // ciclo de vida do MarshalByRefObject
+      return null;
     }
   }
 

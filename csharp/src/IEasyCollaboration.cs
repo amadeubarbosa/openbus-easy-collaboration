@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
+using omg.org.CORBA;
 using tecgraf.openbus.core.v2_0.services;
 using tecgraf.openbus.services.collaboration.v1_0;
-using omg.org.CORBA;
 
-namespace tecgraf.openbus.easycollab{
+namespace tecgraf.openbus.services.collaboration.easy{
   /// <summary>
   /// Interface de apoio ao Serviço de Colaboração.
   /// </summary>
