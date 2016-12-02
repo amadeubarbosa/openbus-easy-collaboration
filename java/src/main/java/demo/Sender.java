@@ -1,10 +1,13 @@
 package demo;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import demo.Utils.ORBRunThread;
+import demo.Utils.ShutdownThread;
+import org.omg.CORBA.ORB;
+import tecgraf.openbus.Connection;
+import tecgraf.openbus.OpenBusContext;
+import tecgraf.openbus.core.ORBInitializer;
+import tecgraf.openbus.services.collaboration.easy.EasyCollaboration;
+import tecgraf.openbus.services.collaboration.easy.IEasyCollaboration;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -13,17 +16,12 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.border.Border;
-
-import tecgraf.openbus.services.collaboration.easy.IEasyCollaboration;
-import tecgraf.openbus.services.collaboration.easy.EasyCollaboration;
-import demo.Utils.ORBRunThread;
-import demo.Utils.ShutdownThread;
-
-import org.omg.CORBA.ORB;
-
-import tecgraf.openbus.Connection;
-import tecgraf.openbus.OpenBusContext;
-import tecgraf.openbus.core.ORBInitializer;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 public class Sender extends JFrame implements ActionListener {
 
@@ -41,6 +39,7 @@ public class Sender extends JFrame implements ActionListener {
 
   private JTextField makeText() {
     JTextField t = new JTextField(20);
+    t.setToolTipText("DICA: Você pode usar ; para separar vários dados que serão enviados como um array de strings!!");
     t.setEditable(true);
     t.setHorizontalAlignment(JTextField.RIGHT);
     t.setBorder(border);
@@ -117,7 +116,16 @@ public class Sender extends JFrame implements ActionListener {
 
     @Override
     protected Void doInBackground() throws Exception {
-      easy.shareDataKey(keyText.getText().getBytes());
+      String[] array = keyText.getText().split(";");
+      if (array.length > 1) {
+        ArrayList<byte[]> list = new ArrayList<byte[]>();
+        for (String term : array) {
+          list.add(term.getBytes());
+        }
+        easy.shareDataKeys(list);
+      } else {
+        easy.shareDataKey(array[0].getBytes());
+      }
       return null;
     }
 

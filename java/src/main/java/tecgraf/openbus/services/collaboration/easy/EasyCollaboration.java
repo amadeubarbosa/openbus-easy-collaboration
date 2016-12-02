@@ -2,7 +2,16 @@ package tecgraf.openbus.services.collaboration.easy;
 
 import org.omg.CORBA.Any;
 import org.omg.CORBA.ORB;
+import org.omg.CORBA.ORBPackage.InvalidName;
 import org.omg.CORBA.OctetSeqHelper;
+import org.omg.CORBA.TCKind;
+import org.omg.CORBA.TypeCode;
+import org.omg.DynamicAny.DynAnyFactory;
+import org.omg.DynamicAny.DynAnyFactoryHelper;
+import org.omg.DynamicAny.DynAnyFactoryPackage.InconsistentTypeCode;
+import org.omg.DynamicAny.DynAnyPackage.InvalidValue;
+import org.omg.DynamicAny.DynAnyPackage.TypeMismatch;
+import org.omg.DynamicAny.DynArray;
 import org.omg.PortableServer.POA;
 import org.omg.PortableServer.POAHelper;
 import scs.core.IComponent;
@@ -10,7 +19,18 @@ import tecgraf.openbus.OpenBusContext;
 import tecgraf.openbus.core.v2_0.services.ServiceFailure;
 import tecgraf.openbus.core.v2_0.services.offer_registry.ServiceOfferDesc;
 import tecgraf.openbus.core.v2_0.services.offer_registry.ServiceProperty;
-import tecgraf.openbus.services.collaboration.v1_0.*;
+import tecgraf.openbus.services.collaboration.v1_0.CollaborationObserver;
+import tecgraf.openbus.services.collaboration.v1_0.CollaborationObserverHelper;
+import tecgraf.openbus.services.collaboration.v1_0.CollaborationObserverPOA;
+import tecgraf.openbus.services.collaboration.v1_0.CollaborationRegistry;
+import tecgraf.openbus.services.collaboration.v1_0.CollaborationRegistryHelper;
+import tecgraf.openbus.services.collaboration.v1_0.CollaborationSession;
+import tecgraf.openbus.services.collaboration.v1_0.EventConsumer;
+import tecgraf.openbus.services.collaboration.v1_0.EventConsumerHelper;
+import tecgraf.openbus.services.collaboration.v1_0.EventConsumerPOA;
+import tecgraf.openbus.services.collaboration.v1_0.SessionDoesNotExist;
+import tecgraf.openbus.services.collaboration.v1_0.SessionRegistry;
+import tecgraf.openbus.services.collaboration.v1_0.SessionRegistryHelper;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -20,6 +40,7 @@ import java.util.logging.Logger;
 public class EasyCollaboration implements IEasyCollaboration {
 
   private OpenBusContext context;
+  private DynAnyFactory factory;
   private SessionRegistry sessions;
   private CollaborationRegistry collabs;
   private CollaborationSession theSession;
@@ -44,6 +65,12 @@ public class EasyCollaboration implements IEasyCollaboration {
    */
   @Override
   public CollaborationSession startCollaboration() throws ServiceFailure {
+    try {
+      factory = DynAnyFactoryHelper.narrow(context.orb().resolve_initial_references("DynAnyFactory"));
+    } catch (InvalidName e) {
+      throw new ServiceFailure(e.getMessage());
+    }
+
     logger.info("Starting collaboration");
     SessionRegistry sreg = getSessions();
     try {
@@ -53,30 +80,24 @@ public class EasyCollaboration implements IEasyCollaboration {
     catch (SessionDoesNotExist e) {
       logger.warning("Session not found for entity " + e.entity);
     }
-    catch (tecgraf.openbus.core.v2_0.services.ServiceFailure e) {
-      throw new ServiceFailure(e.getMessage());
-    }
     catch (Throwable t) {
       logger.severe("Unknown error: " + t.getMessage());
-      t.printStackTrace();
+      throw new ServiceFailure(t.getMessage());
     }
-    try {
-      if (theSession == null) {
-        CollaborationRegistry collab = getCollabs();
-        theSession = collab.createCollaborationSession();
-        sreg.registerSession(theSession);
-      }
 
-      obsId = theSession.subscribeObserver(buildObserver());
-      logger.info("Observer subscribed");
-
-      consumer = buildConsumer();
-      subsId = theSession.channel().subscribe(consumer);
-      logger.info("Consumer registered");
+    if (theSession == null) {
+      CollaborationRegistry collab = getCollabs();
+      theSession = collab.createCollaborationSession();
+      sreg.registerSession(theSession);
     }
-    catch (tecgraf.openbus.core.v2_0.services.ServiceFailure ex) {
-      throw new ServiceFailure(ex.getMessage());
-    } 
+
+    obsId = theSession.subscribeObserver(buildObserver());
+    logger.info("Observer subscribed");
+
+    consumer = buildConsumer();
+    subsId = theSession.channel().subscribe(consumer);
+    logger.info("Consumer registered");
+
     return theSession;
 
   }
@@ -91,11 +112,7 @@ public class EasyCollaboration implements IEasyCollaboration {
       theSession.unsubscribeObserver(obsId);
       logger.info("Collaboration finished");
     }
-    catch (tecgraf.openbus.core.v2_0.services.ServiceFailure e) {
-      throw new ServiceFailure(e.getMessage());
-    }
     finally {
-      
       subsId = 0;
       obsId = 0;
       theSession = null;
@@ -146,14 +163,9 @@ public class EasyCollaboration implements IEasyCollaboration {
    */
   @Override
   public void shareDataKey(byte[] key) throws ServiceFailure {
-    try {
-      Any any = context.orb().create_any();
-      OctetSeqHelper.insert(any, key);
-      theSession.channel().push(any);
-    }
-    catch (tecgraf.openbus.core.v2_0.services.ServiceFailure e) {
-      throw new ServiceFailure(e.getMessage());
-    }
+    Any any = context.orb().create_any();
+    OctetSeqHelper.insert(any, key);
+    theSession.channel().push(any);
   }
 
   /**
@@ -162,13 +174,23 @@ public class EasyCollaboration implements IEasyCollaboration {
   @Override
   public void shareDataKeys(List<byte[]> keys) throws ServiceFailure {
     try {
-      for(byte[] key: keys) {
-        Any any = context.orb().create_any();
-        OctetSeqHelper.insert(any, key);
-        theSession.channel().push(any);
+      TypeCode array_tc =
+              context.orb().create_array_tc(keys.size(), OctetSeqHelper.type());
+      DynArray dyn_array =
+              (DynArray) factory.create_dyn_any_from_type_code( array_tc );
+
+      Any[] elements = new Any[keys.size()];
+      for (int i = 0; i < keys.size(); i++) {
+        elements[i] = context.orb().create_any();
+        OctetSeqHelper.insert(elements[i], keys.get(i));
       }
+      dyn_array.set_elements(elements);
+
+      theSession.channel().push(dyn_array.to_any());
+
+      dyn_array.destroy();
     }
-    catch (tecgraf.openbus.core.v2_0.services.ServiceFailure e) {
+    catch (InconsistentTypeCode | InvalidValue | TypeMismatch e) {
       throw new ServiceFailure(e.getMessage());
     }
   }
@@ -178,12 +200,7 @@ public class EasyCollaboration implements IEasyCollaboration {
    */
   @Override
   public void shareAny(Any any) throws ServiceFailure {
-    try {
-      theSession.channel().push(any);
-    }
-    catch (tecgraf.openbus.core.v2_0.services.ServiceFailure e) {
-      throw new ServiceFailure(e.getMessage());
-    }
+    theSession.channel().push(any);
   }
 
   /**
@@ -277,11 +294,27 @@ public class EasyCollaboration implements IEasyCollaboration {
     }
 
     @Override
-    public void push(Any event)
-      throws tecgraf.openbus.core.v2_0.services.ServiceFailure {
-      logger.info("Received event");
+    public void push(Any event) throws ServiceFailure {
+      logger.info("Received event type: " + event.type().toString());
+
       if (event.type().equivalent(OctetSeqHelper.type())) {
         keys.add(OctetSeqHelper.extract(event));
+      } else if (event.type().kind().value() == TCKind._tk_array) {
+        DynArray dyn_array;
+        try {
+          dyn_array = (DynArray) factory.create_dyn_any( event );
+        } catch (InconsistentTypeCode e) {
+          throw new ServiceFailure(e.getMessage());
+        }
+        Any[] elements = dyn_array.get_elements();
+        for (int i = 0; i < elements.length; i++) {
+          if (elements[i].type().equivalent(OctetSeqHelper.type())) {
+            keys.add(OctetSeqHelper.extract(elements[i]));
+          }else {
+            anys.add(elements[i]);
+          }
+        }
+        dyn_array.destroy();
       }
       else {
         anys.add(event);
