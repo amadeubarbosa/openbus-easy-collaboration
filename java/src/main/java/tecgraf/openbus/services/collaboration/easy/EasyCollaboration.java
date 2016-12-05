@@ -1,7 +1,6 @@
 package tecgraf.openbus.services.collaboration.easy;
 
 import org.omg.CORBA.Any;
-import org.omg.CORBA.ORB;
 import org.omg.CORBA.ORBPackage.InvalidName;
 import org.omg.CORBA.OctetSeqHelper;
 import org.omg.CORBA.TCKind;
@@ -14,6 +13,10 @@ import org.omg.DynamicAny.DynAnyPackage.TypeMismatch;
 import org.omg.DynamicAny.DynArray;
 import org.omg.PortableServer.POA;
 import org.omg.PortableServer.POAHelper;
+import org.omg.PortableServer.POAManagerPackage.AdapterInactive;
+import org.omg.PortableServer.POAPackage.ObjectNotActive;
+import org.omg.PortableServer.POAPackage.ServantAlreadyActive;
+import org.omg.PortableServer.POAPackage.WrongPolicy;
 import scs.core.IComponent;
 import tecgraf.openbus.OpenBusContext;
 import tecgraf.openbus.core.v2_0.services.ServiceFailure;
@@ -21,12 +24,14 @@ import tecgraf.openbus.core.v2_0.services.offer_registry.ServiceOfferDesc;
 import tecgraf.openbus.core.v2_0.services.offer_registry.ServiceProperty;
 import tecgraf.openbus.services.collaboration.v1_0.CollaborationObserver;
 import tecgraf.openbus.services.collaboration.v1_0.CollaborationObserverHelper;
+import tecgraf.openbus.services.collaboration.v1_0.CollaborationObserverOperations;
 import tecgraf.openbus.services.collaboration.v1_0.CollaborationObserverPOA;
 import tecgraf.openbus.services.collaboration.v1_0.CollaborationRegistry;
 import tecgraf.openbus.services.collaboration.v1_0.CollaborationRegistryHelper;
 import tecgraf.openbus.services.collaboration.v1_0.CollaborationSession;
 import tecgraf.openbus.services.collaboration.v1_0.EventConsumer;
 import tecgraf.openbus.services.collaboration.v1_0.EventConsumerHelper;
+import tecgraf.openbus.services.collaboration.v1_0.EventConsumerOperations;
 import tecgraf.openbus.services.collaboration.v1_0.EventConsumerPOA;
 import tecgraf.openbus.services.collaboration.v1_0.SessionDoesNotExist;
 import tecgraf.openbus.services.collaboration.v1_0.SessionRegistry;
@@ -39,25 +44,48 @@ import java.util.logging.Logger;
 
 public class EasyCollaboration implements IEasyCollaboration {
 
+  private POA poa;
   private OpenBusContext context;
   private DynAnyFactory factory;
   private SessionRegistry sessions;
   private CollaborationRegistry collabs;
   private CollaborationSession theSession;
-  private Consumer servant;
-  private SessionObserver observer;
-  private EventConsumer consumer;
+
+  private CollaborationObserverPOA observer;
+  private EventConsumerPOA consumer;
+
+  private byte[] observerPOAId;
+  private byte[] consumerPOAId;
+
   private int subsId;
   private int obsId;
-  
-  /**
-   * O <i>logger</i>.
-   */
+
   private static Logger logger = Logger
     .getLogger(EasyCollaboration.class.getName());
 
+  /**
+   * Construtor padrão, nesse caso a biblioteca vai usar implementações básicas de {@link EventConsumerOperations}
+   * e {@link CollaborationObserverOperations}.
+   *
+   * @param context Contexto do OpenBus, objeto responsável pelo gerenciamento de conexões
+   */
   public EasyCollaboration(OpenBusContext context) {
     this.context = context;
+    this.consumer = new Consumer();
+    this.observer = new Observer();
+  }
+
+  /**
+   * Construtor com opção de permitir o consumo e a observação da sessão por objetos específicos da aplicação.
+   *
+   * @param context Contexto do OpenBus responsável pelo gerenciamento de conexões
+   * @param consumer Instância do servant da interface {@link EventConsumerOperations}
+   * @param observer Instância do servant da interface {@link CollaborationObserverOperations}
+   */
+  public EasyCollaboration(OpenBusContext context, EventConsumerPOA consumer, CollaborationObserverPOA observer) {
+    this(context);
+    this.consumer = consumer;
+    this.observer = observer;
   }
 
   /**
@@ -67,36 +95,34 @@ public class EasyCollaboration implements IEasyCollaboration {
   public CollaborationSession startCollaboration() throws ServiceFailure {
     try {
       factory = DynAnyFactoryHelper.narrow(context.orb().resolve_initial_references("DynAnyFactory"));
-    } catch (InvalidName e) {
+      poa = POAHelper.narrow(context.orb().resolve_initial_references("RootPOA"));
+      poa.the_POAManager().activate();
+    } catch (InvalidName | AdapterInactive e) {
       throw new ServiceFailure(e.getMessage());
     }
 
     logger.info("Starting collaboration");
     SessionRegistry sreg = getSessions();
-    try {
-      theSession = sreg.getSession();
-      logger.info("Session retrieved: " + theSession);
-    }
-    catch (SessionDoesNotExist e) {
-      logger.warning("Session not found for entity " + e.entity);
-    }
-    catch (Throwable t) {
-      logger.severe("Unknown error: " + t.getMessage());
-      throw new ServiceFailure(t.getMessage());
-    }
+    synchronized (this) {
+      try {
+        theSession = sreg.getSession();
+        logger.info("Session retrieved: " + theSession);
+      } catch (SessionDoesNotExist e) {
+        logger.warning("Session not found for entity " + e.entity);
+      } catch (Throwable t) {
+        logger.severe("Unknown error: " + t.getMessage());
+        throw new ServiceFailure(t.getMessage());
+      }
 
-    if (theSession == null) {
-      CollaborationRegistry collab = getCollabs();
-      theSession = collab.createCollaborationSession();
-      sreg.registerSession(theSession);
+      if (theSession == null) {
+        CollaborationRegistry collab = getCollabs();
+        theSession = collab.createCollaborationSession();
+        sreg.registerSession(theSession);
+      }
+
+      activateObserver(poa);
+      activateConsumer(poa);
     }
-
-    obsId = theSession.subscribeObserver(buildObserver());
-    logger.info("Observer subscribed");
-
-    consumer = buildConsumer();
-    subsId = theSession.channel().subscribe(consumer);
-    logger.info("Consumer registered");
 
     return theSession;
 
@@ -107,54 +133,82 @@ public class EasyCollaboration implements IEasyCollaboration {
    */
   @Override
   public void exitCollaboration() throws ServiceFailure {
-    try {
-      theSession.channel().unsubscribe(subsId);
-      theSession.unsubscribeObserver(obsId);
-      logger.info("Collaboration finished");
-    }
-    finally {
-      subsId = 0;
-      obsId = 0;
-      theSession = null;
-      servant = null;
-      consumer = null;
-      observer = null;
-      collabs = null;
-      sessions = null;
+    synchronized (this) {
+      try {
+        deactivateConsumer(poa);
+        deactivateObserver(poa);
+      } finally {
+        subsId = 0;
+        obsId = 0;
+        theSession = null;
+        consumerPOAId = null;
+        observerPOAId = null;
+        collabs = null;
+        sessions = null;
+        logger.info("Collaboration finished");
+      }
     }
   }
 
-  private CollaborationObserver buildObserver() throws ServiceFailure {
+  private void deactivateConsumer(POA poa) throws ServiceFailure {
     try {
-      ORB orb = context.orb();
-      observer = new SessionObserver(context.getCurrentConnection().login().entity);
-      POA poa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
-      poa.the_POAManager().activate();
-      byte[] id = poa.activate_object(observer);
-      CollaborationObserver ref = CollaborationObserverHelper.narrow(poa.id_to_reference(id));
-      return ref;      
+      poa.deactivate_object(consumerPOAId);
     }
-    catch (Exception e) {
-      // should never happen
-      throw new ServiceFailure(e.getLocalizedMessage(),
-          "Error while session observer activation");
+    catch (WrongPolicy | ObjectNotActive e) {
+      logger.warning("Failed to deactivate consumer: " + e);
+    }
+    theSession.channel().unsubscribe(subsId);
+  }
+
+  private void deactivateObserver(POA poa) throws ServiceFailure {
+    try {
+      poa.deactivate_object(observerPOAId);
+    }
+    catch (WrongPolicy | ObjectNotActive e) {
+      logger.warning("Failed to deactivate observer: " + e);
+    }
+    theSession.unsubscribeObserver(obsId);
+  }
+
+  private void activateObserver(POA poa) throws ServiceFailure {
+    if (observerPOAId != null) {
+      try {
+        deactivateObserver(poa);
+      } catch (Exception e) {
+        logger.warning("Failed to deactivate previously activated observer: " + e.getMessage());
+      }
+    }
+    if (observer != null) {
+      try {
+        observerPOAId = poa.activate_object(observer);
+        CollaborationObserver ref = CollaborationObserverHelper.narrow(poa.id_to_reference(observerPOAId));
+        obsId = theSession.subscribeObserver(ref);
+        logger.info("Collaboration observer subscribed");
+      } catch (WrongPolicy | ServantAlreadyActive | ObjectNotActive e) {
+        throw new ServiceFailure(e.getLocalizedMessage(),
+            "Error while collaboration observer activation");
+      }
     }
   }
   
-  private EventConsumer buildConsumer() throws ServiceFailure {
-    try {
-      ORB orb = context.orb();
-      servant = new Consumer();
-      POA poa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
-      poa.the_POAManager().activate();
-      byte[] id = poa.activate_object(servant);
-      EventConsumer ref = EventConsumerHelper.narrow(poa.id_to_reference(id));
-      return ref;
+  private void activateConsumer(POA poa) throws ServiceFailure {
+    if (consumerPOAId != null) {
+      try {
+        deactivateConsumer(poa);
+      } catch (Exception e) {
+        logger.warning("Failed to deactivate previously activated consumer: " + e.getMessage());
+      }
     }
-    catch (Exception e) {
-      // should never happen
-      throw new ServiceFailure(e.getLocalizedMessage(),
-        "Error while event consumer activation");
+    if (consumer != null) {
+      try {
+        consumerPOAId = poa.activate_object(consumer);
+        EventConsumer ref = EventConsumerHelper.narrow(poa.id_to_reference(consumerPOAId));
+        subsId = theSession.channel().subscribe(ref);
+        logger.info("Consumer registered");
+      } catch (WrongPolicy | ServantAlreadyActive | ObjectNotActive e) {
+        throw new ServiceFailure(e.getLocalizedMessage(),
+            "Error while event consumer activation");
+      }
     }
   }
 
@@ -208,9 +262,13 @@ public class EasyCollaboration implements IEasyCollaboration {
    */
   @Override
   public List<byte[]> consumeDataKeys() {
-    synchronized (servant.keys) {
-      LinkedList<byte[]> list = new LinkedList<byte[]>(servant.keys);
-      servant.keys.clear();
+    synchronized (this) {
+      LinkedList<byte[]> list = new LinkedList<byte[]>();
+      if (consumer instanceof Consumer) {
+        Consumer servant = (Consumer) consumer;
+        list.addAll(servant.keys);
+        servant.keys.clear();
+      }
       return list;
     }
   }
@@ -220,9 +278,13 @@ public class EasyCollaboration implements IEasyCollaboration {
    */
   @Override
   public List<Any> consumeAnys() {
-    synchronized (servant.anys) {
-      LinkedList<Any> list = new LinkedList<Any>(servant.anys);
-      servant.anys.clear();
+    synchronized (this) {
+      LinkedList<Any> list = new LinkedList<Any>();
+      if (consumer instanceof Consumer) {
+        Consumer servant = (Consumer) consumer;
+        list.addAll(servant.anys);
+        servant.anys.clear();
+      }
       return list;
     }
   }
@@ -325,31 +387,24 @@ public class EasyCollaboration implements IEasyCollaboration {
   /**
    * Observador simplificado para sessões de colaboração.
    * 
-   * 
    * @author Tecgraf/PUC-Rio
    *
    */
-  class SessionObserver extends CollaborationObserverPOA {
-
-    private String entity;
-
-    public SessionObserver(String entity) {
-      this.entity = entity;
-    }
+  private class Observer extends CollaborationObserverPOA {
 
     @Override
-    public void memberAdded(String name, IComponent member) throws tecgraf.openbus.core.v2_0.services.ServiceFailure{
+    public void memberAdded(String name, IComponent member) throws ServiceFailure{
       logger.info("Member added: " + name);
     }
 
     @Override
-    public void memberRemoved(String name) throws tecgraf.openbus.core.v2_0.services.ServiceFailure {
+    public void memberRemoved(String name) throws ServiceFailure {
       logger.info("Member removed: " + name);
     }
 
     @Override
-    public void destroyed() throws tecgraf.openbus.core.v2_0.services.ServiceFailure {
-      logger.info("Session destroyed");
+    public void destroyed() throws ServiceFailure {
+      logger.info("Collaboration session destroyed");
     }
   }
 

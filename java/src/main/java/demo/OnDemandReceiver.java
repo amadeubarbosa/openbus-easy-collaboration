@@ -2,17 +2,23 @@ package demo;
 
 import demo.Utils.ORBRunThread;
 import demo.Utils.ShutdownThread;
+import org.omg.CORBA.Any;
 import org.omg.CORBA.ORB;
 import tecgraf.openbus.Connection;
 import tecgraf.openbus.OpenBusContext;
 import tecgraf.openbus.core.ORBInitializer;
+import tecgraf.openbus.core.v2_0.OctetSeqHelper;
+import tecgraf.openbus.core.v2_0.services.ServiceFailure;
 import tecgraf.openbus.services.collaboration.easy.EasyCollaboration;
 import tecgraf.openbus.services.collaboration.easy.IEasyCollaboration;
+import tecgraf.openbus.services.collaboration.v1_0.EventConsumerPOA;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JTextField;
+import javax.swing.JLabel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.border.Border;
@@ -21,31 +27,21 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-public class Sender extends JFrame implements ActionListener {
+public class OnDemandReceiver extends JFrame implements ActionListener {
 
   private static Connection conn;
   private static OpenBusContext context;
   private static IEasyCollaboration easy;
   private final GridBagConstraints constraints;
   public final Border border = BorderFactory.createLoweredBevelBorder();
-  protected final JTextField keyText;
-  final JButton startButton, stopButton, sendButton;
+  final JButton startButton, stopButton;
+  final JLabel receiveStatus;
 
   private StartTask startTask;
   private StopTask stopTask;
-  private SendTask sendTask;
-
-  private JTextField makeText() {
-    JTextField t = new JTextField(20);
-    t.setToolTipText("DICA: Você pode usar ; para separar vários dados que serão enviados como um array de strings!!");
-    t.setEditable(true);
-    t.setHorizontalAlignment(JTextField.RIGHT);
-    t.setBorder(border);
-    getContentPane().add(t, constraints);
-    return t;
-  }
 
   private JButton makeButton(String caption) {
     JButton b = new JButton(caption);
@@ -55,22 +51,26 @@ public class Sender extends JFrame implements ActionListener {
     return b;
   }
 
-  public Sender() {
-    super(Sender.class.getSimpleName());
+  public OnDemandReceiver() {
+    super(OnDemandReceiver.class.getSimpleName());
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     //Make text boxes
     getContentPane().setLayout(new GridBagLayout());
     constraints = new GridBagConstraints();
     constraints.insets = new Insets(3, 10, 3, 10);
-    keyText = makeText();
 
     //Make buttons
     startButton = makeButton("Start");
     stopButton = makeButton("Stop");
     stopButton.setEnabled(false);
-    sendButton = makeButton("Send");
-    sendButton.setEnabled(false);
+
+    //Make online label
+    receiveStatus = new JLabel();
+    receiveStatus.setText("Waiting to start...        ");
+    getContentPane().add(receiveStatus, constraints);
+
+    easy = new EasyCollaboration(context, new OnDemandReceiver.Consumer(), null);
 
     //Display the window.
     pack();
@@ -90,7 +90,7 @@ public class Sender extends JFrame implements ActionListener {
     protected void done() {
       startButton.setEnabled(false);
       stopButton.setEnabled(true);
-      sendButton.setEnabled(true);
+      receiveStatus.setText("Waiting for events...    ");
     }
 
   }
@@ -107,31 +107,7 @@ public class Sender extends JFrame implements ActionListener {
     protected void done() {
       startButton.setEnabled(true);
       stopButton.setEnabled(false);
-      sendButton.setEnabled(false);
-    }
-
-  }
-
-  private class SendTask extends SwingWorker<Void, Void> {
-
-    @Override
-    protected Void doInBackground() throws Exception {
-      String[] array = keyText.getText().split(";");
-      if (array.length > 1) {
-        ArrayList<byte[]> list = new ArrayList<byte[]>();
-        for (String term : array) {
-          list.add(term.getBytes());
-        }
-        easy.shareDataKeys(list);
-      } else {
-        easy.shareDataKey(array[0].getBytes());
-      }
-      return null;
-    }
-
-    @Override
-    protected void done() {
-      keyText.setText(null);
+      receiveStatus.setText("Waiting to start...      ");
     }
 
   }
@@ -144,12 +120,28 @@ public class Sender extends JFrame implements ActionListener {
       case "Stop":
         (stopTask = new StopTask()).execute();
         break;
-      case "Send":
-        (sendTask = new SendTask()).execute();
-        break;
     }
 
   }
+
+  class Consumer extends EventConsumerPOA {
+    long events = 0;
+
+    @Override
+    public void push(Any event) throws ServiceFailure {
+      String unit = "th";
+      events += 1;
+      if (events <= 3) {
+        unit = "rd";
+      } else if (events == 2) {
+        unit = "nd";
+      } else if (events == 1) {
+        unit = "st";
+      }
+      receiveStatus.setText("Received "+ events + unit + " event!");
+    }
+  }
+
 
   public static void main(String[] args) throws Exception {
     Configs configs = Configs.readConfigsFile();
@@ -157,7 +149,7 @@ public class Sender extends JFrame implements ActionListener {
     byte[] password = configs.password;
     String host = configs.bushost;
     int port = configs.busport;
-//    Utils.setLibLogLevel(Level.FINE);
+    //Utils.setLibLogLevel(Level.FINE);
 
     ORB orb = ORBInitializer.initORB(args);
     new ORBRunThread(orb).start();
@@ -169,11 +161,10 @@ public class Sender extends JFrame implements ActionListener {
     context.setDefaultConnection(conn);
     conn.loginByPassword(entity, password);
     shutdown.addConnection(conn);
-    easy = new EasyCollaboration(context);
 
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        new Sender();
+        new OnDemandReceiver();
       }
     });
   }

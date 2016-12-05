@@ -59,7 +59,7 @@ public class Receiver extends JFrame implements ActionListener {
   }
 
   public Receiver() {
-    super("Receiver");
+    super(Receiver.class.getSimpleName());
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     //Make text boxes

@@ -23,7 +23,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
-public class Sender extends JFrame implements ActionListener {
+public class OnlyProducer extends JFrame implements ActionListener {
 
   private static Connection conn;
   private static OpenBusContext context;
@@ -55,8 +55,8 @@ public class Sender extends JFrame implements ActionListener {
     return b;
   }
 
-  public Sender() {
-    super(Sender.class.getSimpleName());
+  public OnlyProducer() {
+    super(OnlyProducer.class.getSimpleName());
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     //Make text boxes
@@ -169,11 +169,12 @@ public class Sender extends JFrame implements ActionListener {
     context.setDefaultConnection(conn);
     conn.loginByPassword(entity, password);
     shutdown.addConnection(conn);
-    easy = new EasyCollaboration(context);
+
+    easy = new EasyCollaboration(context, null, null);
 
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        new Sender();
+        new OnlyProducer();
       }
     });
   }
