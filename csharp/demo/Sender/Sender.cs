@@ -16,6 +16,9 @@ namespace Sender
     {
       InitializeComponent();
       Setup();
+      new ToolTip().SetToolTip(this.input, 
+        "DICA: Você pode usar ; para separar vários dados"+
+        " que serão enviados como um array de strings!!");
     }
 
     private void Setup()
@@ -47,7 +50,13 @@ namespace Sender
     }
     private void Send_click(object sender, EventArgs e)
     {
-      easy.ShareDataKeys(new List<byte[]>() { ASCIIEncoding.UTF8.GetBytes(this.input.Text) });
+      char[] delimiter = {';'};
+      List<byte[]> data = new List<byte[]>();
+      foreach (string item in this.input.Text.Split(delimiter))
+      {
+        data.Add(ASCIIEncoding.UTF8.GetBytes(item));
+      }
+      easy.ShareDataKeys(data);
       this.input.Text = "";
     }
 

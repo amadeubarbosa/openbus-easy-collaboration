@@ -102,11 +102,10 @@ namespace tecgraf.openbus.services.collaboration.easy{
     }
 
     public void ShareDataKeys(List<byte[]> keys){
-      foreach (byte[] key in keys){
-        omg.org.CORBA.TypeCode byteTC = OrbServices.GetSingleton().create_octet_tc();
-        omg.org.CORBA.TypeCode sequenceTC = OrbServices.GetSingleton().create_sequence_tc(0, byteTC);
-        Share(new Any(key, sequenceTC));
-      }
+      omg.org.CORBA.TypeCode byteTC = OrbServices.GetSingleton().create_octet_tc();
+      omg.org.CORBA.TypeCode sequenceTC = OrbServices.GetSingleton().create_sequence_tc(0, byteTC);
+      omg.org.CORBA.TypeCode arrayTC = OrbServices.GetSingleton().create_array_tc(keys.Count, sequenceTC);
+      Share(new Any(keys.ToArray(), arrayTC));
     }
 
     public void Share(Any any){
@@ -266,7 +265,13 @@ namespace tecgraf.openbus.services.collaboration.easy{
       if (e is byte[]) {
         Keys.Add((byte[]) e);
       }
-      else {
+      else if (e is byte[][]) {
+        foreach (byte[] item in (byte[][]) e) {
+          Keys.Add(item);
+        }
+      }
+      else
+      {
         Anys.Add(e);
       }
     }

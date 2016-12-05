@@ -59,9 +59,5 @@ namespace Receiver
       this.stop.Click += new System.EventHandler(this.Stop_click);
       this.receive.Click += new System.EventHandler(this.Receive_click);
     }
-
-    private void textBox1_TextChanged(object sender, EventArgs e)
-    {
-    }
   }
 }

@@ -40,13 +40,13 @@
       this.output.Multiline = true;
       this.output.Name = "output";
       this.output.ReadOnly = true;
-      this.output.Size = new System.Drawing.Size(100, 93);
+      this.output.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+      this.output.Size = new System.Drawing.Size(269, 93);
       this.output.TabIndex = 0;
-      this.output.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
       // 
       // receive
       // 
-      this.receive.Location = new System.Drawing.Point(278, 13);
+      this.receive.Location = new System.Drawing.Point(450, 11);
       this.receive.Name = "receive";
       this.receive.Size = new System.Drawing.Size(75, 23);
       this.receive.TabIndex = 5;
@@ -56,7 +56,7 @@
       // stop
       // 
       this.stop.Enabled = false;
-      this.stop.Location = new System.Drawing.Point(197, 13);
+      this.stop.Location = new System.Drawing.Point(369, 11);
       this.stop.Name = "stop";
       this.stop.Size = new System.Drawing.Size(75, 23);
       this.stop.TabIndex = 4;
@@ -65,7 +65,7 @@
       // 
       // start
       // 
-      this.start.Location = new System.Drawing.Point(116, 13);
+      this.start.Location = new System.Drawing.Point(288, 11);
       this.start.Name = "start";
       this.start.Size = new System.Drawing.Size(75, 23);
       this.start.TabIndex = 3;
@@ -76,7 +76,7 @@
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-      this.ClientSize = new System.Drawing.Size(366, 118);
+      this.ClientSize = new System.Drawing.Size(534, 118);
       this.Controls.Add(this.receive);
       this.Controls.Add(this.stop);
       this.Controls.Add(this.start);
