@@ -7,7 +7,6 @@ import org.omg.CORBA.ORB;
 import tecgraf.openbus.Connection;
 import tecgraf.openbus.OpenBusContext;
 import tecgraf.openbus.core.ORBInitializer;
-import tecgraf.openbus.core.v2_0.OctetSeqHelper;
 import tecgraf.openbus.core.v2_0.services.ServiceFailure;
 import tecgraf.openbus.services.collaboration.easy.EasyCollaboration;
 import tecgraf.openbus.services.collaboration.easy.IEasyCollaboration;
@@ -17,8 +16,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.border.Border;
@@ -27,8 +24,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public class OnDemandReceiver extends JFrame implements ActionListener {
 

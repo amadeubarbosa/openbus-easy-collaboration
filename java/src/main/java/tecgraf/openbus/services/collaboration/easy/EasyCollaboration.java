@@ -68,6 +68,8 @@ public class EasyCollaboration implements IEasyCollaboration {
    * e {@link CollaborationObserverOperations}.
    *
    * @param context Contexto do OpenBus, objeto responsável pelo gerenciamento de conexões
+   *
+   * @see EasyCollaboration.Consumer
    */
   public EasyCollaboration(OpenBusContext context) {
     this.context = context;
@@ -76,11 +78,41 @@ public class EasyCollaboration implements IEasyCollaboration {
   }
 
   /**
-   * Construtor com opção de permitir o consumo e a observação da sessão por objetos específicos da aplicação.
+   * Construtor opcional para aplicação fornecer um objeto para a observação da sessão.
+   *
+   * Esse construtor é opcional porque a aplicação sempre pode adicionar outros consumidores ou outros observadores no
+   * {@link CollaborationSession} quando inicia a colaboração através do {@link EasyCollaboration#startCollaboration()}.
+   *
+   * <p>A aplicação pode tanto usar uma classe que estenda {@link CollaborationObserverPOA} quanto uma classe que
+   * implemente a interface {@link EventConsumerOperations} e, por fim, crie o servant usando o recurso de delegação de
+   * {@link tecgraf.openbus.services.collaboration.v1_0.CollaborationObserverPOATie}.
+   *
+   * @param context Contexto do OpenBus responsável pelo gerenciamento de conexões
+   * @param observer Instância do servant da interface {@link CollaborationObserverOperations}
+   *
+   * @see EasyCollaboration.Consumer
+   */
+  public EasyCollaboration(OpenBusContext context, CollaborationObserverPOA observer) {
+    this(context);
+    this.observer = observer;
+  }
+
+  /**
+   * Construtor opcional para aplicação fornecer tanto o consumidor quanto o observador da sessão.
+   *
+   * Esse construtor é opcional porque a aplicação sempre pode adicionar outros consumidores ou outros observadores no
+   * {@link CollaborationSession} quando inicia a colaboração através do {@link EasyCollaboration#startCollaboration()}.
+   *
+   * <p>A aplicação pode tanto usar classes que estendam {@link EventConsumerPOA} e {@link CollaborationObserverPOA} quanto
+   * classes que implementem as interfaces {@link EventConsumerOperations} e {@link CollaborationObserverOperations} e,
+   * por fim, criem os servants usando o recurso de delegação de
+   * {@link tecgraf.openbus.services.collaboration.v1_0.EventConsumerPOATie} e
+   * {@link tecgraf.openbus.services.collaboration.v1_0.CollaborationObserverPOATie}.
    *
    * @param context Contexto do OpenBus responsável pelo gerenciamento de conexões
    * @param consumer Instância do servant da interface {@link EventConsumerOperations}
    * @param observer Instância do servant da interface {@link CollaborationObserverOperations}
+   *
    */
   public EasyCollaboration(OpenBusContext context, EventConsumerPOA consumer, CollaborationObserverPOA observer) {
     this(context);
@@ -340,21 +372,33 @@ public class EasyCollaboration implements IEasyCollaboration {
   }
 
   /**
-   * Consumidor simplificado para o canais de eventos de sessões
+   * Consumidor simplificado para o canais de eventos de sessões com suporte a consumir byte[] e byte[][] como DataKeys.
    * 
    * @author Tecgraf/PUC-Rio
    *
    */
-  class Consumer extends EventConsumerPOA {
+  protected class Consumer extends EventConsumerPOA {
 
     private List<byte[]> keys;
     private List<Any> anys;
 
-    public Consumer() {
+    Consumer() {
       this.keys = Collections.synchronizedList(new LinkedList<byte[]>());
       this.anys = Collections.synchronizedList(new LinkedList<Any>());
     }
 
+    /**
+     * Recebe um evento encapsulado em um CORBA {@link Any} e acumula os eventos para serem consumidos através do
+     * {@link EasyCollaboration#consumeDataKeys()} ou {@link EasyCollaboration#consumeAnys()}.
+     *
+     * <p>Para estar disponível no {@link EasyCollaboration#consumeDataKeys()} o evento precisa ser ou uma sequência de
+     * bytes (byte[]) ou um array de uma sequência de bytes (byte[][]).
+     * Caso o evento seja de qualquer outro tipo estará disponível no {@link EasyCollaboration#consumeAnys()}.
+     *
+     * @param event Evento enviado para o {@link tecgraf.openbus.services.collaboration.v1_0.EventChannel} contido
+     *              na {@link CollaborationSession}
+     * @throws ServiceFailure caso haja uma inconsistência no tipo esperado
+     */
     @Override
     public void push(Any event) throws ServiceFailure {
       logger.info("Received event type: " + event.type().toString());
