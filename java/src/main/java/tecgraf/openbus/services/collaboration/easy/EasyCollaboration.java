@@ -121,6 +121,17 @@ public class EasyCollaboration implements IEasyCollaboration {
   }
 
   /**
+   * Busca uma sessão de colaboração pré-existente.
+   *
+   * @return sessão de colaboração
+   * @throws ServiceFailure caso alguma haja alguma falha no serviço remoto
+   * @throws SessionDoesNotExist caso ainda não exista uma sessão de colaboração
+   */
+  public CollaborationSession findCollaboration() throws ServiceFailure, SessionDoesNotExist {
+    return getSessions().getSession();
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
