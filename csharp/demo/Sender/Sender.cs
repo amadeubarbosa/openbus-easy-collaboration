@@ -28,7 +28,7 @@ namespace Sender
       Connection conn = context.CreateConnection(Settings.Default.host, Settings.Default.port);
       context.SetDefaultConnection(conn);
       conn.LoginByPassword(Settings.Default.username, ASCIIEncoding.Default.GetBytes(Settings.Default.password));
-      easy = new EasyCollaboration(ORBInitializer.Context);
+      easy = new EasyCollaboration(context, null, null);
     }
 
     public static void Shutdown(object sender, EventArgs e)
