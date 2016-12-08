@@ -12,6 +12,8 @@
 * edit src/main/resources/test.properties (or target/classes/test.properties)
 * execute the sender: mvn exec:java -Dexec.mainClass=demo.Sender &
 * execute the receiver: mvn exec:java -Dexec.mainClass=demo.Receiver &
+* execute the optional receiver: mvn exec:java -Dexec.mainClass=demo.OnDemandReceiver &
+* execute the optional sender: mvn exec:java -Dexec.mainClass=demo.OnlyProducer &
 
 ## Lib CSharp
 
