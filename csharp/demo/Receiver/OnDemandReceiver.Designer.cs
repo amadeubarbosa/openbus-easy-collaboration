@@ -1,6 +1,6 @@
 ﻿namespace Receiver
 {
-  partial class Receiver
+  partial class OnDemandReceiver
   {
     /// <summary>
     /// Required designer variable.
@@ -28,35 +28,15 @@
     /// </summary>
     private void InitializeComponent()
     {
-      this.output = new System.Windows.Forms.TextBox();
-      this.receive = new System.Windows.Forms.Button();
       this.stop = new System.Windows.Forms.Button();
       this.start = new System.Windows.Forms.Button();
+      this.status = new System.Windows.Forms.Label();
       this.SuspendLayout();
-      // 
-      // output
-      // 
-      this.output.Location = new System.Drawing.Point(12, 40);
-      this.output.Multiline = true;
-      this.output.Name = "output";
-      this.output.ReadOnly = true;
-      this.output.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-      this.output.Size = new System.Drawing.Size(376, 93);
-      this.output.TabIndex = 0;
-      // 
-      // receive
-      // 
-      this.receive.Location = new System.Drawing.Point(174, 11);
-      this.receive.Name = "receive";
-      this.receive.Size = new System.Drawing.Size(75, 23);
-      this.receive.TabIndex = 5;
-      this.receive.Text = "Receive";
-      this.receive.UseVisualStyleBackColor = true;
       // 
       // stop
       // 
       this.stop.Enabled = false;
-      this.stop.Location = new System.Drawing.Point(93, 11);
+      this.stop.Location = new System.Drawing.Point(94, 12);
       this.stop.Name = "stop";
       this.stop.Size = new System.Drawing.Size(75, 23);
       this.stop.TabIndex = 4;
@@ -65,25 +45,33 @@
       // 
       // start
       // 
-      this.start.Location = new System.Drawing.Point(12, 11);
+      this.start.Location = new System.Drawing.Point(13, 12);
       this.start.Name = "start";
       this.start.Size = new System.Drawing.Size(75, 23);
       this.start.TabIndex = 3;
       this.start.Text = "Start";
       this.start.UseVisualStyleBackColor = true;
       // 
-      // Receiver
+      // status
+      // 
+      this.status.AutoSize = true;
+      this.status.Location = new System.Drawing.Point(10, 53);
+      this.status.Name = "status";
+      this.status.Size = new System.Drawing.Size(87, 13);
+      this.status.TabIndex = 6;
+      this.status.Text = "status label";
+      // 
+      // OnDemandReceiver
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-      this.ClientSize = new System.Drawing.Size(400, 145);
-      this.Controls.Add(this.receive);
+      this.ClientSize = new System.Drawing.Size(180, 75);
+      this.Controls.Add(this.status);
       this.Controls.Add(this.stop);
       this.Controls.Add(this.start);
-      this.Controls.Add(this.output);
-      this.Name = "Receiver";
-      this.Text = "Receiver";
-      this.Load += new System.EventHandler(this.Receiver_Load);
+      this.Name = "OnDemandReceiver";
+      this.Text = "OnDemandReceiver";
+      this.Load += new System.EventHandler(this.OnDemandReceiver_Load);
       this.ResumeLayout(false);
       this.PerformLayout();
 
@@ -91,10 +79,9 @@
 
     #endregion
 
-    private System.Windows.Forms.TextBox output;
-    private System.Windows.Forms.Button receive;
     private System.Windows.Forms.Button stop;
     private System.Windows.Forms.Button start;
+    private System.Windows.Forms.Label status;
 
   }
 }

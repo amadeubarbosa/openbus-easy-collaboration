@@ -20,11 +20,12 @@ namespace Receiver
     private void Setup()
     {
       OpenBusContext context = ORBInitializer.Context;
-
-      Connection conn = context.CreateConnection(Settings.Default.host, Settings.Default.port);
-      context.SetDefaultConnection(conn);
-      conn.LoginByPassword(Settings.Default.username, ASCIIEncoding.Default.GetBytes(Settings.Default.password));
-      easy = new EasyCollaboration(context);
+      if (context.GetDefaultConnection() == null) {
+        Connection conn = context.CreateConnection(Settings.Default.host, Settings.Default.port);
+        context.SetDefaultConnection(conn);
+        conn.LoginByPassword(Settings.Default.username, ASCIIEncoding.Default.GetBytes(Settings.Default.password));
+      }
+      easy = new EasyCollaboration(context); // it will use default consumer of EasyCollaboration
     }
 
     public static void Shutdown(object sender, EventArgs e)

@@ -68,6 +68,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="OnDemandReceiver.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="OnDemandReceiver.Designer.cs">
+      <DependentUpon>OnDemandReceiver.cs</DependentUpon>
+    </Compile>
     <Compile Include="Receiver.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -77,6 +83,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
+    <EmbeddedResource Include="OnDemandReceiver.resx">
+      <DependentUpon>OnDemandReceiver.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Receiver.resx">
       <DependentUpon>Receiver.cs</DependentUpon>
     </EmbeddedResource>

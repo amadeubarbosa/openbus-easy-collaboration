@@ -124,7 +124,7 @@ namespace tecgraf.openbus.services.collaboration.easy
 
     private void UpdateActivation()
     {
-      if (_obsId != 0)
+      if (_observer != null)
       {
         try
         {
@@ -134,9 +134,6 @@ namespace tecgraf.openbus.services.collaboration.easy
         {
           Logger.Warn("Failed to deactivate previously activated observer: " + e);
         }
-      }
-      if (_observer != null)
-      {
         try
         {
           OrbServices.ActivateObject((MarshalByRefObject)_observer);
@@ -151,7 +148,7 @@ namespace tecgraf.openbus.services.collaboration.easy
           throw;
         }
       }
-      if (_subsId != 0)
+      if (_consumer != null)
       {
         try
         {
@@ -161,9 +158,6 @@ namespace tecgraf.openbus.services.collaboration.easy
         {
           Logger.Warn("Failed to deactivate previously activated consumer: " + e);
         }
-      }
-      if (_consumer != null)
-      {
         try
         {
           OrbServices.ActivateObject((MarshalByRefObject)_consumer);
@@ -182,16 +176,22 @@ namespace tecgraf.openbus.services.collaboration.easy
 
     private void DeactivateConsumer()
     {
-      _theSession.channel.unsubscribe(_subsId);
-      OrbServices.DeactivateObject((MarshalByRefObject)_consumer);
-      _subsId = 0;
+      if (_subsId != 0)
+      {
+        _theSession.channel.unsubscribe(_subsId);
+        OrbServices.DeactivateObject((MarshalByRefObject)_consumer);
+        _subsId = 0;
+      }
     }
 
     private void DeactivateObserver()
     {
-      _theSession.unsubscribeObserver(_obsId);
-      OrbServices.DeactivateObject((MarshalByRefObject)_observer);
-      _obsId = 0;
+      if (_obsId != 0)
+      {
+        _theSession.unsubscribeObserver(_obsId);
+        OrbServices.DeactivateObject((MarshalByRefObject)_observer);
+        _obsId = 0;
+      }
     }
 
     public void ExitCollaboration()
