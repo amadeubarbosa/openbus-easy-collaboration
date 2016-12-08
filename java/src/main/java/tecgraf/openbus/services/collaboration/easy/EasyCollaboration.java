@@ -194,34 +194,38 @@ public class EasyCollaboration implements IEasyCollaboration {
   }
 
   private void deactivateConsumer(POA poa) throws ServiceFailure {
+    if (consumerPOAId == null) {
+      return;
+    }
     try {
       poa.deactivate_object(consumerPOAId);
-    }
-    catch (WrongPolicy | ObjectNotActive e) {
+    } catch (WrongPolicy | ObjectNotActive e) {
       logger.warning("Failed to deactivate consumer: " + e);
     }
     theSession.channel().unsubscribe(subsId);
+    subsId = 0;
   }
 
   private void deactivateObserver(POA poa) throws ServiceFailure {
+    if (observerPOAId == null) {
+      return;
+    }
     try {
       poa.deactivate_object(observerPOAId);
-    }
-    catch (WrongPolicy | ObjectNotActive e) {
+    } catch (WrongPolicy | ObjectNotActive e) {
       logger.warning("Failed to deactivate observer: " + e);
     }
     theSession.unsubscribeObserver(obsId);
+    obsId = 0;
   }
 
   private void activateObserver(POA poa) throws ServiceFailure {
-    if (observerPOAId != null) {
+    if (observer != null) {
       try {
         deactivateObserver(poa);
       } catch (Exception e) {
         logger.warning("Failed to deactivate previously activated observer: " + e.getMessage());
       }
-    }
-    if (observer != null) {
       try {
         observerPOAId = poa.activate_object(observer);
         CollaborationObserver ref = CollaborationObserverHelper.narrow(poa.id_to_reference(observerPOAId));
@@ -235,14 +239,12 @@ public class EasyCollaboration implements IEasyCollaboration {
   }
   
   private void activateConsumer(POA poa) throws ServiceFailure {
-    if (consumerPOAId != null) {
+    if (consumer != null) {
       try {
         deactivateConsumer(poa);
       } catch (Exception e) {
         logger.warning("Failed to deactivate previously activated consumer: " + e.getMessage());
       }
-    }
-    if (consumer != null) {
       try {
         consumerPOAId = poa.activate_object(consumer);
         EventConsumer ref = EventConsumerHelper.narrow(poa.id_to_reference(consumerPOAId));

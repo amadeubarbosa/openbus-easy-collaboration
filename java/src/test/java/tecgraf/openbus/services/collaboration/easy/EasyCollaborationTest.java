@@ -15,8 +15,6 @@ import tecgraf.openbus.services.collaboration.v1_0.CollaborationObserverPOA;
 import tecgraf.openbus.services.collaboration.v1_0.CollaborationSession;
 import tecgraf.openbus.services.collaboration.v1_0.EventConsumerPOA;
 
-import java.util.concurrent.CountDownLatch;
-
 public class EasyCollaborationTest {
 
   private static TestConfigs configs;
@@ -67,17 +65,21 @@ public class EasyCollaborationTest {
   }
 
   @Test
-  public void noCollaborationExitTwice() throws Exception {
+  public void multipleExitCallInSameReference() throws Exception {
     EasyCollaboration easy = new EasyCollaboration(context);
     session = easy.startCollaboration();
     Assert.assertNotNull(session);
     easy.exitCollaboration();
-    try {
-      easy.exitCollaboration();
-      Assert.fail("Exit collaboration called twice doesn't throw an exception");
-    } catch (NullPointerException e) {
-      // expected only after first exit call
-    }
+    easy.exitCollaboration();
+    easy.exitCollaboration();
+    easy.exitCollaboration();
+    easy = new EasyCollaboration(context, null, null);
+    session = easy.startCollaboration();
+    Assert.assertNotNull(session);
+    easy.exitCollaboration();
+    easy.exitCollaboration();
+    easy.exitCollaboration();
+    easy.exitCollaboration();
   }
 
   @Test
